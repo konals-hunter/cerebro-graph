@@ -11,4 +11,4 @@ DSH 文档图谱插件：把「文档 → 图谱 → 分析」跑进 DSH 对话�
 
 ## 状态
 
-Spec 最终版已定稿，未编码。下一步：按 spec 编写实现计划 / 开始编码。
+实现计划见 [docs/superpowers/plans/2026-08-19-dsh-doc-graph-implementation.md](docs/superpowers/plans/2026-08-19-dsh-doc-graph-implementation.md)。
