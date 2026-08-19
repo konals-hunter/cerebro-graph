@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>dsh-doc-graph · 3D Compact Node Study v4</title>
+<style>
+:root{
+  --canvas:#f7f6f3;--surface:#fffefa;--surface-2:#f1f0ec;--ink:#17232b;--muted:#6d777a;--caption:#929b9b;
+  --line:#deddd7;--line-strong:#c8cbc7;--navy:#173e59;--steel:#5f8294;--mist:#a9bbc2;--amber:#bc8750;--other:#9ca6a6;
+  --ease:cubic-bezier(.23,1,.32,1)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+body{padding:26px}
+button{font:inherit}
+.app{max-width:1440px;margin:0 auto}
+.topbar{display:flex;align-items:center;gap:14px;padding:0 2px 18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}.brand-mark{width:28px;height:28px;border-radius:50%;background:var(--navy);box-shadow:0 0 0 6px rgba(95,130,148,.10),0 5px 12px rgba(23,62,89,.18);flex:none}.brand-copy{min-width:0}.brand-title{font-size:16px;font-weight:700;letter-spacing:.01em}.brand-sub{font-size:10px;color:var(--muted);margin-top:2px}.top-spacer{flex:1}.version{font-size:10px;color:var(--caption);letter-spacing:.04em}.btn{height:30px;padding:0 12px;border:1px solid var(--line-strong);border-radius:7px;background:var(--surface);color:var(--ink);font-size:11px;cursor:pointer;transition:border-color 160ms ease,background-color 160ms ease,transform 160ms ease}.btn:hover{border-color:var(--steel);background:#f4f7f7}.btn:active{transform:scale(.97)}.btn:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.workspace{display:grid;grid-template-columns:178px minmax(0,1fr) 220px;gap:12px;margin-top:14px;align-items:stretch}.side,.inspector{border:1px solid var(--line);background:rgba(255,254,250,.72);border-radius:10px;padding:13px}.side-title,.inspector-kicker{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--caption);margin-bottom:13px}.legend-group+.legend-group{border-top:1px solid var(--line);padding-top:13px;margin-top:13px}.legend-row{display:flex;align-items:center;gap:8px;margin:9px 0;font-size:11px;color:#3e4c50}.legend-dot{width:13px;height:13px;border-radius:50%;flex:none;box-shadow:inset -2px -2px 3px rgba(0,0,0,.12),0 0 0 3px rgba(255,255,255,.65)}.legend-dot.current{background:var(--navy);box-shadow:inset -2px -2px 3px rgba(0,0,0,.14),0 0 0 4px rgba(95,130,148,.12)}.legend-dot.direct{background:var(--steel)}.legend-dot.transitive{background:var(--mist)}.legend-dot.section{background:var(--amber)}.legend-dot.other{background:var(--other)}.size-demo{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px;line-height:1.4}.size-demo i{display:block;border-radius:50%;background:var(--steel);box-shadow:inset -2px -2px 3px rgba(0,0,0,.14)}.size-demo i:first-child{width:9px;height:9px}.size-demo i:last-child{width:18px;height:18px;background:var(--navy)}.line-demo{height:1px;background:#87999e;margin:5px 0 8px}.line-demo.thin{width:64px}.line-demo.selected{width:64px;height:2px;background:#587d8b}.side-note{font-size:10px;line-height:1.65;color:var(--caption);margin-top:16px}
+.stage{min-width:0}.stage-head{display:flex;align-items:center;gap:10px;height:31px;margin-bottom:7px}.stage-title{font-size:13px;font-weight:700}.stage-hint{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stage-status{margin-left:auto;font-size:10px;color:var(--steel);white-space:nowrap}.stage-body{position:relative;height:650px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:radial-gradient(700px 420px at 50% 44%,#fffefa 0%,#faf9f6 58%,#ebeae5 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}.stage-body:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(23,35,43,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(23,35,43,.035) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 88%);pointer-events:none}.stage-body:after{content:"";position:absolute;left:50%;top:50%;width:260px;height:260px;transform:translate(-50%,-50%);border:1px solid rgba(95,130,148,.12);border-radius:50%;box-shadow:0 0 0 58px rgba(95,130,148,.025),0 0 0 116px rgba(95,130,148,.018);pointer-events:none}.graph{position:absolute;inset:0;z-index:1}.canvas-note{position:absolute;left:12px;bottom:11px;z-index:3;padding:5px 8px;border:1px solid rgba(200,203,199,.8);border-radius:6px;background:rgba(255,254,250,.84);color:var(--caption);font-size:10px;pointer-events:none}.fallback{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:30px;text-align:center;color:var(--muted);font-size:12px;background:rgba(247,246,243,.92)}.fallback[hidden]{display:none}
+.inspector{min-height:650px}.empty{height:100%;min-height:430px;display:flex;flex-direction:column;justify-content:center;gap:8px;color:var(--muted)}.empty-glyph{width:30px;height:30px;border-radius:50%;background:var(--mist);box-shadow:0 0 0 8px rgba(169,187,194,.13);margin-bottom:5px}.empty strong{font-size:12px;color:var(--ink)}.empty span{font-size:10.5px;line-height:1.6}.inspector-content[hidden]{display:none}.role-pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--steel);margin-bottom:10px}.role-pill i{width:8px;height:8px;border-radius:50%;background:currentColor}.inspector h2{font-size:15px;line-height:1.3;margin:0 0 5px;overflow-wrap:anywhere}.inspector-path{font:10px/1.5 ui-monospace,Consolas,monospace;color:var(--muted);overflow-wrap:anywhere;margin-bottom:14px}.inspector-desc{font-size:11px;line-height:1.65;color:var(--muted);padding-bottom:13px;border-bottom:1px solid var(--line)}.metrics{display:grid;grid-template-columns:1fr 1fr;padding:13px 0;border-bottom:1px solid var(--line)}.metric+.metric{border-left:1px solid var(--line);padding-left:11px}.metric b{display:block;font-size:21px;font-variant-numeric:tabular-nums}.metric span{font-size:10px;color:var(--caption)}.inspector-foot{font-size:10px;line-height:1.6;color:var(--caption);margin-top:14px}
+.bottom-note{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--caption);font-size:10px}.bottom-note:before{content:"";width:24px;height:1px;background:var(--line-strong)}
+@media(max-width:1080px){body{padding:16px}.workspace{grid-template-columns:158px minmax(0,1fr)}.inspector{grid-column:1/-1;min-height:0}.empty{min-height:150px}.inspector-content{display:grid;grid-template-columns:1fr auto;gap:8px 16px}.metrics{grid-column:1/-1}.inspector-foot{margin:0}}
+@media(max-width:800px){.side-note{display:none}}
+@media(max-width:700px){body{padding:10px}.topbar{gap:8px;padding-bottom:12px}.brand-title{font-size:14px}.brand-sub,.version{display:none}.topbar .btn{padding:0 9px}.workspace{display:block;margin-top:10px}.side{display:flex;flex-wrap:wrap;gap:0 17px;margin-bottom:10px;padding:10px}.side-title{width:100%;margin-bottom:5px}.legend-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.legend-group+.legend-group{border-top:0;padding-top:0;margin-top:0}.legend-row{margin:3px 0;font-size:10px}.size-demo,.side-note{display:none}.stage-head{height:28px}.stage-title{font-size:12px}.stage-hint{font-size:9.5px}.stage-status{font-size:9.5px}.stage-body{height:455px;border-radius:8px}.canvas-note{bottom:24px}.inspector{margin-top:10px;padding:11px}.inspector-content{display:block}.inspector h2{font-size:14px}.metrics{margin-top:10px}.bottom-note{font-size:9.5px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}.stage-body:after{display:none}}
+</style>
+<!-- three-force-graph bundles its renderer; this global Three build supplies constructors for custom node meshes. -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-copy"><div class="brand-title">dsh-doc-graph</div><div class="brand-sub">3D compact node study</div></div></div>
+    <div class="top-spacer"></div><span class="version">v4 · spheres / compact links</span><button class="btn" id="btnFit" type="button">重置视图</button>
+  </header>
+  <main class="workspace">
+    <aside class="side" aria-label="图例">
+      <div class="side-title">Node hierarchy</div>
+      <div class="legend-group">
+        <div class="legend-row"><i class="legend-dot current"></i><span>当前文档</span></div>
+        <div class="legend-row"><i class="legend-dot direct"></i><span>直接影响</span></div>
+        <div class="legend-row"><i class="legend-dot transitive"></i><span>传递影响</span></div>
+        <div class="legend-row"><i class="legend-dot section"></i><span>章节</span></div>
+        <div class="legend-row"><i class="legend-dot other"></i><span>其他文档</span></div>
+      </div>
+      <div class="legend-group">
+        <div class="side-title">Relations</div>
+        <div class="line-demo thin"></div><div class="size-demo"><span>普通引用</span></div>
+        <div class="line-demo selected"></div><div class="size-demo"><span>选中路径</span></div>
+      </div>
+      <div class="legend-group">
+        <div class="side-title">Scale</div>
+        <div class="size-demo"><i></i><i></i><span>体积表示重要度</span></div>
+      </div>
+      <p class="side-note">节点是视觉主角。关系线只保留连接方向与拓扑，不承担主要配色。</p>
+    </aside>
+    <section class="stage" aria-label="3D 图谱">
+      <div class="stage-head"><strong class="stage-title">影响关系 · 3D</strong><span class="stage-hint">拖拽节点 · 旋转视角 · 滚轮缩放</span><span class="stage-status" id="canvasStatus">已选中 · security-policy.md</span></div>
+      <div class="stage-body"><div class="graph" id="graph"></div><div class="fallback" id="fallback" hidden>3D 图谱引擎暂时不可用，请检查 Three.js 与 3d-force-graph 依赖。</div><div class="canvas-note">球体体积优先 · 低饱和关系线 · 点击节点查看详情</div></div>
+    </section>
+    <aside class="inspector" aria-live="polite">
+      <div class="empty" id="inspectorEmpty"><div class="empty-glyph"></div><strong>选择一个节点</strong><span>点击球体查看文档角色、引用方向和影响范围。</span></div>
+      <div class="inspector-content" id="inspectorContent" hidden>
+        <div class="inspector-kicker">Selected node</div>
+        <div class="role-pill"><i id="roleDot"></i><span id="roleName">当前文档</span></div>
+        <h2 id="nodeName">security-policy.md</h2>
+        <div class="inspector-path" id="nodePath">docs/security/security-policy.md</div>
+        <div class="inspector-desc" id="nodeDesc">安全策略主文档，当前图谱的影响中心。</div>
+        <div class="metrics"><div class="metric"><b id="inbound">7</b><span>入向关系</span></div><div class="metric"><b id="outbound">2</b><span>出向关系</span></div></div>
+        <div class="inspector-foot">当前选中关系会使用更明显的蓝灰线与少量方向粒子；其他连接保持安静。</div>
+      </div>
+    </aside>
+  </main>
+  <div class="bottom-note">节点体积表示重要度 · 关系线仅用于连接拓扑 · 选中后显示局部路径</div>
+</div>
+<script>
+const GRAPH={
+  nodes:[
+    {id:'security-policy',name:'security-policy.md',type:'doc',role:'current',val:11},
+    {id:'s-auth',name:'#认证',type:'section',role:'section',val:3},
+    {id:'s-audit',name:'#审计',type:'section',role:'section',val:3},
+    {id:'api-access',name:'api-access.md',type:'doc',role:'direct',val:6},
+    {id:'data-retention',name:'data-retention.md',type:'doc',role:'direct',val:6},
+    {id:'onboarding',name:'onboarding.md',type:'doc',role:'direct',val:5},
+    {id:'q1-risk',name:'q1-risk.md',type:'doc',role:'transitive',val:4},
+    {id:'incident-runbook',name:'incident-runbook.md',type:'doc',role:'transitive',val:5},
+    {id:'compliance',name:'compliance.md',type:'doc',role:'transitive',val:4},
+    {id:'vendor-review',name:'vendor-review.pdf',type:'doc',role:'other',val:3},
+    {id:'audit-log',name:'audit-log.html',type:'doc',role:'other',val:4},
+    {id:'glossary',name:'glossary.txt',type:'doc',role:'other',val:2}
+  ],
+  links:[
+    {source:'security-policy',target:'s-auth',kind:'contains'},
+    {source:'security-policy',target:'s-audit',kind:'contains'},
+    {source:'api-access',target:'security-policy',kind:'references'},
+    {source:'data-retention',target:'security-policy',kind:'references'},
+    {source:'onboarding',target:'security-policy',kind:'references'},
+    {source:'q1-risk',target:'data-retention',kind:'references'},
+    {source:'incident-runbook',target:'api-access',kind:'references'},
+    {source:'compliance',target:'data-retention',kind:'references'},
+    {source:'s-audit',target:'audit-log',kind:'references'},
+    {source:'q1-risk',target:'vendor-review',kind:'references'},
+    {source:'incident-runbook',target:'q1-risk',kind:'references'},
+    {source:'vendor-review',target:'compliance',kind:'references'},
+    {source:'audit-log',target:'glossary',kind:'references'}
+  ]
+};
+const ROLE_STYLE={
+  current:{name:'当前文档',radius:9,color:'#173e59',glow:'#6d9bb0',glowOpacity:.25,label:true},
+  direct:{name:'直接影响',radius:7,color:'#5f8294',glow:'#91b3bf',glowOpacity:.16,label:true},
+  transitive:{name:'传递影响',radius:5.8,color:'#a9bbc2',glow:'#c2d1d5',glowOpacity:.10,label:false},
+  section:{name:'章节',radius:5,color:'#bc8750',glow:'#d8aa76',glowOpacity:.12,label:false},
+  other:{name:'其他文档',radius:4.8,color:'#9ca6a6',glow:'#c0c8c5',glowOpacity:.08,label:false}
+};
+const DOC_PATH={
+  'security-policy':'docs/security/security-policy.md','api-access':'policies/api-access.md','data-retention':'policies/data-retention.md','onboarding':'docs/onboarding.md','q1-risk':'reports/q1-risk.md','incident-runbook':'docs/runbooks/incident-runbook.md','compliance':'policies/compliance.md','vendor-review':'reports/vendor-review.pdf','audit-log':'docs/audit-log.html','glossary':'docs/glossary.txt'
+};
+const DOC_DESC={
+  'security-policy':'安全策略主文档，当前图谱的影响中心。','api-access':'描述访问控制与 API 权限边界。','data-retention':'描述数据留存周期与删除策略。','onboarding':'新成员入职时引用的安全流程。','q1-risk':'季度风险汇总，间接引用留存策略。','incident-runbook':'事件响应手册，沿访问控制链路产生影响。','compliance':'合规约束文档，关联数据治理要求。','vendor-review':'供应商审查记录，位于影响链末端。','audit-log':'审计日志格式与保留说明。','glossary':'术语表与关系链末端引用。'
+};
+const INITIAL_POS={
+  'security-policy':[0,0,0],'s-auth':[-28,-18,10],'s-audit':[-28,18,-10],
+  'api-access':[38,-42,20],'data-retention':[50,0,-18],'onboarding':[38,42,16],
+  'q1-risk':[92,-22,30],'incident-runbook':[86,-58,-22],'compliance':[92,36,-28],
+  'vendor-review':[122,-46,24],'audit-log':[-74,44,26],'glossary':[-112,58,-20]
+};
+let selectedNodeId='security-policy';
+let g3d=null;let threeReady=false;let prefersReducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const graphEl=document.getElementById('graph'),fallback=document.getElementById('fallback');
+function endpointId(endpoint){return typeof endpoint==='string'?endpoint:endpoint.id}
+function isSelectedLink(link){return selectedNodeId&& (endpointId(link.source)===selectedNodeId||endpointId(link.target)===selectedNodeId)}
+function linkForNode(id){return GRAPH.links.filter(link=>endpointId(link.source)===id||endpointId(link.target)===id)}
+function makeSphereNode(node){
+  const style=ROLE_STYLE[node.role];const selected=node.id===selectedNodeId;const group=new THREE.Group();
+  const core=new THREE.Mesh(new THREE.SphereGeometry(style.radius,48,48),new THREE.MeshPhongMaterial({color:style.color,emissive:style.glow,emissiveIntensity:selected?0.42:0.24,shininess:48,specular:'#c9d9dd'}));
+  const glow=new THREE.Mesh(new THREE.SphereGeometry(style.radius*1.24,32,32),new THREE.MeshBasicMaterial({color:style.glow,transparent:true,opacity:selected?0.30:style.glowOpacity,depthWrite:false,depthTest:false}));
+  group.add(core,glow);return group;
+}
+function updateInspector(id){
+  const node=GRAPH.nodes.find(item=>item.id===id);if(!node)return;selectedNodeId=id;const links=linkForNode(id);const inbound=links.filter(link=>endpointId(link.target)===id).length;const outbound=links.filter(link=>endpointId(link.source)===id).length;const style=ROLE_STYLE[node.role];
+  document.getElementById('inspectorEmpty').hidden=true;document.getElementById('inspectorContent').hidden=false;document.getElementById('roleName').textContent=style.name;document.getElementById('roleDot').style.color=style.color;document.getElementById('nodeName').textContent=node.name;document.getElementById('nodePath').textContent=DOC_PATH[id]||'章节节点 · 来自当前文档';document.getElementById('nodeDesc').textContent=DOC_DESC[id]||'章节节点，当前文档内部的语义分组。';document.getElementById('inbound').textContent=inbound;document.getElementById('outbound').textContent=outbound;document.getElementById('canvasStatus').textContent=`已选中 · ${node.name}`;
+}
+function graphData(){return {nodes:GRAPH.nodes.map(node=>({...node,val:Math.pow(ROLE_STYLE[node.role].radius,3),color:ROLE_STYLE[node.role].color,x:INITIAL_POS[node.id][0],y:INITIAL_POS[node.id][1],z:INITIAL_POS[node.id][2]})),links:GRAPH.links.map(link=>({...link,color:isSelectedLink(link)?'#587d8b':link.kind==='contains'?'#b6aa9d':'#84979d'}))}}
+function configureGraph(){
+  g3d.backgroundColor('rgba(0,0,0,0)').nodeRelSize(1).nodeVal('val').nodeLabel(node=>`${node.name} · ${ROLE_STYLE[node.role].name}`).nodeThreeObject(node=>makeSphereNode(node)).linkColor(link=>isSelectedLink(link)?'#587d8b':link.kind==='contains'?'#b6aa9d':'#84979d').linkWidth(link=>isSelectedLink(link)?1.2:(link.kind==='contains'?0.42:0.58)).linkOpacity(link=>isSelectedLink(link)?0.82:(link.kind==='contains'?0.28:0.42)).linkDirectionalArrowLength(link=>link.kind==='contains'?0:1.7).linkDirectionalArrowRelPos(.62).linkDirectionalArrowColor(()=>'#7b8d92').linkDirectionalParticles(link=>prefersReducedMotion?0:(isSelectedLink(link)?1:0)).linkDirectionalParticleWidth(link=>isSelectedLink(link)?0.8:0).onNodeClick(node=>{updateInspector(node.id);refreshSelection()}).onNodeHover(node=>{graphEl.style.cursor=node?'pointer':'default'}).cooldownTicks(120).width(graphEl.clientWidth).height(graphEl.clientHeight);
+  g3d.d3Force('charge').strength(-120);g3d.d3Force('link').distance(76);
+}
+function renderGraph(){if(!g3d)return;g3d.graphData(graphData())}
+function refreshSelection(){if(!g3d)return;g3d.nodeThreeObject(node=>makeSphereNode(node)).linkColor(link=>isSelectedLink(link)?'#587d8b':link.kind==='contains'?'#b6aa9d':'#84979d').linkWidth(link=>isSelectedLink(link)?1.2:(link.kind==='contains'?0.42:0.58)).linkOpacity(link=>isSelectedLink(link)?0.82:(link.kind==='contains'?0.28:0.42)).linkDirectionalParticles(link=>prefersReducedMotion?0:(isSelectedLink(link)?1:0))}
+function applyFit(){if(g3d)g3d.zoomToFit(prefersReducedMotion?250:550,64)}
+function fitGraph(){if(!g3d)return;g3d.d3ReheatSimulation();setTimeout(applyFit,prefersReducedMotion?80:420)}
+function initGraph(){
+  threeReady=typeof ForceGraph3D!=='undefined'&&typeof THREE!=='undefined';if(!threeReady){fallback.hidden=false;return}
+  try{g3d=ForceGraph3D()(graphEl);g3d.cameraPosition({x:0,y:0,z:250},{x:0,y:0,z:0},0);configureGraph();renderGraph();updateInspector(selectedNodeId)}catch(error){console.warn('3D graph initialization failed',error);threeReady=false;fallback.hidden=false}
+}
+document.getElementById('btnFit').addEventListener('click',fitGraph);
+let resizeTimer=null;
+function resizeGraph(){if(!g3d)return;g3d.width(graphEl.clientWidth).height(graphEl.clientHeight);applyFit()}
+if(typeof ResizeObserver!=='undefined'){const graphObserver=new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(resizeGraph,150)});graphObserver.observe(graphEl.parentElement)}else{window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(resizeGraph,150)})}
+initGraph();
+</script>
+</body>
+</html>
