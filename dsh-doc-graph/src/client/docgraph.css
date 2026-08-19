@@ -1,0 +1,251 @@
+/* §8.1 host tokens are available on the page; graph colors are plugin-owned. */
+:root {
+  --business: #163b5c;
+  --border-l1: var(--dsw-alias-border-l2, #e5e2da);
+}
+
+/* ---- dock ---- */
+.dsh-docgraph-dock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--dsw-alias-label-primary);
+  padding: 6px 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+.dsh-docgraph-dock-stats { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-dock-btn {
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.dsh-docgraph-dock-hint { font-size: 12px; color: var(--dsw-alias-brand-primary-new-colorprimary-new-color); }
+.dsh-docgraph-phase { border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 600; }
+.dsh-docgraph-phase.phase-ready { background: #e8f3ea; color: #2e7d43; }
+.dsh-docgraph-phase.phase-indexing { background: #fff3df; color: #9a6b1f; }
+.dsh-docgraph-phase.phase-starting { background: #eef4f7; color: #3d6a85; }
+.dsh-docgraph-phase.phase-error { background: #fdecec; color: #b34040; }
+
+/* ---- cards ---- */
+.dsh-docgraph-card {
+  font-size: 13px;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dsh-docgraph-card-hd { display: flex; align-items: baseline; gap: 8px; }
+.dsh-docgraph-card-sub { font-size: 12px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.dsh-docgraph-stat { display: flex; flex-direction: column; gap: 2px; }
+.dsh-docgraph-stat b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.dsh-docgraph-stat span { font-size: 12px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-formats { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--dsw-alias-border-l2); }
+.dsh-docgraph-format { display: block; height: 100%; background: var(--dsw-alias-brand-primary-new-colorprimary-new-color); }
+.dsh-docgraph-legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-foot { margin: 0; font-size: 11px; color: var(--dsw-alias-label-caption); }
+
+.dsh-docgraph-finding { border-left: 3px solid; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+.dsh-docgraph-finding.sev-err { border-color: #c94f4f; }
+.dsh-docgraph-finding.sev-warn { border-color: #c18a3d; }
+.dsh-docgraph-finding.sev-ok { border-color: #7fa58f; }
+.dsh-docgraph-finding-hd { display: flex; align-items: baseline; gap: 8px; }
+.dsh-docgraph-finding code { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-sev { font-size: 11px; border-radius: 999px; padding: 0 6px; }
+.dsh-docgraph-sev.sev-err { background: #fdecec; color: #b34040; }
+.dsh-docgraph-sev.sev-warn { background: #fff3df; color: #9a6b1f; }
+.dsh-docgraph-sev.sev-ok { background: #e8f3ea; color: #2e7d43; }
+.dsh-docgraph-action { align-self: flex-start; border: 1px solid var(--dsw-alias-border-l2); background: transparent; border-radius: 6px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+.dsh-docgraph-action-off { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-finding-docs { display: flex; gap: 6px; font-size: 11px; color: var(--dsw-alias-label-caption); }
+
+.dsh-docgraph-result { border-bottom: 1px solid var(--dsw-alias-border-l2); padding: 4px 0; }
+.dsh-docgraph-result-hd { display: flex; align-items: baseline; gap: 8px; cursor: pointer; flex-wrap: wrap; }
+.dsh-docgraph-result code { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-inbound { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-status-tag { font-size: 11px; border-radius: 999px; padding: 0 6px; }
+.dsh-docgraph-status-tag.tag-active { background: #e8f3ea; color: #2e7d43; }
+.dsh-docgraph-status-tag.tag-stale { background: #f4f3f0; color: #817d76; }
+.dsh-docgraph-status-tag.tag-hot { background: #fdecec; color: #b34040; }
+.dsh-docgraph-status-tag.tag-superseded { background: #eef4f7; color: #3d6a85; }
+.dsh-docgraph-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.dsh-docgraph-chips span { font-size: 11px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 999px; padding: 0 6px; }
+.dsh-docgraph-snippet { margin: 4px 0 0; padding: 6px; background: rgba(0,0,0,.03); border-radius: 6px; font-size: 11px; white-space: pre-wrap; }
+
+.dsh-docgraph-file-row { display: flex; align-items: baseline; gap: 8px; }
+.dsh-docgraph-fmt { font-size: 10px; text-transform: uppercase; border-radius: 4px; padding: 0 4px; background: #f4f3f0; color: #817d76; }
+.dsh-docgraph-file-status { font-size: 11px; }
+.dsh-docgraph-file-status.st-ok { color: #2e7d43; }
+.dsh-docgraph-file-status.st-changed { color: #9a6b1f; }
+.dsh-docgraph-file-status.st-err { color: #b34040; }
+
+.dsh-docgraph-mini { width: 100%; height: 180px; }
+.dsh-docgraph-open-btn { align-self: flex-start; border: 1px solid var(--dsw-alias-border-l2); background: transparent; border-radius: 6px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.dsh-docgraph-error { font-size: 12px; color: var(--dsw-alias-label-caption); }
+
+/* ---- drawer ---- */
+.dsh-docgraph-drawer-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 28, 0.32);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+.dsh-docgraph-drawer {
+  width: min(860px, 94vw);
+  height: 100vh;
+  background: var(--dsw-alias-bg-layer-1, #fff);
+  color: var(--dsw-alias-label-primary);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -12px 0 40px rgba(0,0,0,.12);
+}
+@media (max-width: 1080px) { .dsh-docgraph-drawer { width: 96vw; } }
+@media (max-width: 720px) { .dsh-docgraph-drawer { width: 100vw; } }
+
+.dr-hd {
+  height: 52px;
+  flex: 0 0 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+.dr-hd-title { display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
+.dr-hd .scope, .dr-hd .version-mark, .dr-hd .sync { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-close { border: none; background: transparent; cursor: pointer; font-size: 14px; color: var(--dsw-alias-label-caption); }
+
+.dr-bd {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dsh-docgraph-section { display: flex; flex-direction: column; gap: 8px; }
+.dsh-docgraph-section h2 { margin: 0; font-size: 13px; }
+.dsh-docgraph-overview-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+
+.dsh-docgraph-doclist-actions { display: flex; gap: 8px; }
+.dsh-docgraph-doclist-actions button { border: 1px solid var(--dsw-alias-border-l2); background: transparent; border-radius: 6px; padding: 2px 8px; font-size: 12px; cursor: not-allowed; opacity: .55; }
+.dsh-docgraph-doclist-rows { display: flex; flex-direction: column; }
+.dsh-docgraph-doc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  cursor: pointer;
+  font-size: 13px;
+}
+.dsh-docgraph-doc-row:hover, .dsh-docgraph-doc-row:focus-visible { background: rgba(22,59,92,.05); }
+.dsh-docgraph-doc-row code { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-doc-actions { margin-left: auto; display: flex; gap: 4px; }
+.dsh-docgraph-doc-actions button { border: 1px solid var(--dsw-alias-border-l2); background: transparent; border-radius: 4px; font-size: 11px; padding: 0 6px; cursor: not-allowed; opacity: .5; }
+
+/* ---- graph workspace ---- */
+.dsh-docgraph-workspace {
+  display: grid;
+  grid-template-columns: 156px minmax(0, 1fr) 226px;
+  gap: 12px;
+}
+.dsh-docgraph-workspace-empty { border: 1px dashed var(--dsw-alias-border-l2); border-radius: 12px; padding: 24px; text-align: center; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-rail { display: flex; flex-direction: column; gap: 12px; }
+.dsh-docgraph-rail-group { display: flex; flex-direction: column; gap: 6px; }
+.dsh-docgraph-check { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.dsh-docgraph-rail-label { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-depth { border: 1px solid var(--dsw-alias-border-l2); background: transparent; border-radius: 6px; width: 28px; height: 24px; cursor: pointer; }
+.dsh-docgraph-depth.on { border-color: var(--business); background: #163b5c; color: #fff; }
+.dsh-docgraph-rail-foot { margin: 0; font-size: 11px; color: var(--dsw-alias-label-caption); }
+
+.dsh-docgraph-canvas { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dsh-docgraph-toolbar { display: flex; align-items: center; gap: 8px; }
+.dsh-docgraph-seg { display: inline-flex; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; overflow: hidden; }
+.dsh-docgraph-seg button { border: none; background: transparent; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.dsh-docgraph-seg button.on { background: #163b5c; color: #fff; }
+.dsh-docgraph-canvas-status { flex: 1; font-size: 11px; color: var(--dsw-alias-label-caption); text-align: right; }
+.dsh-docgraph-reset { border: 1px solid var(--dsw-alias-border-l2); background: transparent; border-radius: 6px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+
+.stage-body {
+  position: relative;
+  height: 520px;
+  border: 1px solid var(--border-l1);
+  border-radius: 12px;
+  background: radial-gradient(900px 460px at 50% -10%, #ffffff 0%, #fbfaf8 56%, #f1efe9 100%);
+  overflow: hidden;
+}
+.stage-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(17,17,17,.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17,17,17,.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.65), transparent 86%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.65), transparent 86%);
+  pointer-events: none;
+}
+.dsh-docgraph-g2d, .dsh-docgraph-g3d { width: 100%; height: 100%; }
+.dsh-docgraph-fallback { display: flex; align-items: center; justify-content: center; height: 200px; font-size: 12px; color: var(--dsw-alias-label-caption); border: 1px dashed var(--dsw-alias-border-l2); border-radius: 12px; }
+.dsh-docgraph-canvas-hint { margin: 0; font-size: 11px; color: var(--dsw-alias-label-caption); }
+
+/* ---- inspector ---- */
+.dsh-docgraph-inspector { display: flex; flex-direction: column; gap: 6px; border-left: 1px solid var(--dsw-alias-border-l2); padding-left: 12px; }
+.dsh-docgraph-inspector.empty { align-items: center; justify-content: center; text-align: center; color: var(--dsw-alias-label-caption); border-left: none; }
+.dsh-docgraph-inspector-glyph { font-size: 32px; }
+.dsh-docgraph-inspector-kicker { font-size: 10px; text-transform: uppercase; color: var(--business); letter-spacing: .06em; }
+.dsh-docgraph-inspector h3 { margin: 0; font-size: 15px; }
+.dsh-docgraph-inspector code { font-size: 11px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-inspector p { margin: 0; font-size: 12px; color: var(--dsw-alias-label-caption); }
+.dsh-docgraph-inspector-metrics { display: flex; gap: 16px; }
+.dsh-docgraph-inspector-metrics b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.dsh-docgraph-inspector-metrics span { font-size: 11px; color: var(--dsw-alias-label-caption); display: block; }
+.dsh-docgraph-inspector-actions { display: flex; gap: 8px; }
+.dsh-docgraph-inspector-actions button { border: 1px solid var(--dsw-alias-border-l2); background: transparent; border-radius: 6px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+
+.dsh-docgraph-toast { position: fixed; right: 20px; bottom: 20px; background: #163b5c; color: #fff; font-size: 12px; padding: 6px 12px; border-radius: 8px; z-index: 1100; }
+
+/* ---- responsive §9.1 ---- */
+@media (max-width: 1120px) {
+  .dsh-docgraph-workspace { grid-template-columns: 138px minmax(0, 1fr); }
+  .dsh-docgraph-inspector {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+    border-left: none;
+    border-top: 1px solid var(--dsw-alias-border-l2);
+    padding-left: 0;
+    padding-top: 10px;
+  }
+  .dsh-docgraph-inspector-metrics, .dsh-docgraph-inspector-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .dsh-docgraph-workspace { display: block; }
+  .dsh-docgraph-rail { display: grid; grid-template-columns: 1fr 1fr; }
+  .stage-body { height: 400px; }
+  .dr-hd .scope, .dr-hd .version-mark, .dr-hd .sync { display: none; }
+}
+
+/* ---- reduced motion §11.3 ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* ---- a11y §10.6 ---- */
+:focus-visible { outline: 2px solid var(--business, #163b5c); outline-offset: 2px; }
