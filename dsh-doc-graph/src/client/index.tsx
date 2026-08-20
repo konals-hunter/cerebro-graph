@@ -30,11 +30,11 @@ function sidebarRoot(): Element | null {
   return column.querySelector('[class*="logoRow"]')?.parentElement ?? column.firstElementChild as Element ?? null
 }
 
-function cloneEntryClasses(button: HTMLButtonElement): void {
-  const preview = document.querySelector('[data-dsh-dataagent-preview]')
-  if (!(preview instanceof HTMLElement)) return
-  button.className = preview.className
-  const spans = preview.querySelectorAll('span')
+function cloneEntryClasses(button: HTMLButtonElement, source?: Element | null): void {
+  const target = source ?? document.querySelector('[data-dsh-dataagent-preview]')
+  if (!(target instanceof HTMLElement)) return
+  button.className = target.className
+  const spans = target.querySelectorAll('span')
   const iconClass = spans[0]?.className ?? 'dsh-docgraph-sidebar-icon'
   const labelClass = spans[1]?.className ?? 'dsh-docgraph-sidebar-label'
   button.innerHTML = '<span class="' + iconClass + '">' + SIDEBAR_ICON + '</span><span class="' + labelClass + '">文档图谱</span>'
@@ -45,6 +45,8 @@ function placeSidebarButton(root: Element, button: HTMLButtonElement): boolean {
   const dataAgentRow = root.querySelector('[data-dsh-dataagent-entry]')
   if (dataAgentRow instanceof HTMLElement) {
     const preview = dataAgentRow.querySelector('[data-dsh-dataagent-preview]')
+    const firstEntry = dataAgentRow.querySelector('button')
+    cloneEntryClasses(button, preview ?? firstEntry)
     dataAgentRow.insertBefore(button, preview ?? null)
     if (preview instanceof HTMLElement) preview.remove()
     return true

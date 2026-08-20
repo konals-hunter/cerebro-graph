@@ -1,7 +1,7 @@
+import path, { sep } from "node:path";
 import { defineTool } from "@deepseek-ai/dsh-tools";
 import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
-import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { BUNDLED_SKILL_RANK } from "@deepseek-ai/dsh-skill";
@@ -309,7 +309,7 @@ function nameOf(raw, p) {
 	return (p.split("/").pop() ?? p).replace(/\.[^.]+$/, "");
 }
 function mapRawDoc(raw, project) {
-	const p = asStr(raw.path ?? raw.file_path ?? raw.rel_path ?? raw.relPath, "");
+	const p = asStr(raw.path ?? raw.file_path ?? raw.rel_path ?? raw.relPath, "").replaceAll("\\", "/");
 	return {
 		id: nodeId(project, p),
 		project,
@@ -386,7 +386,8 @@ function mapGraphResult(raw, project, seedNodeId, operation, depth) {
 	let droppedNodes = 0;
 	for (const rn of rawNodes) {
 		const kind = asStr(rn.kind ?? rn.type, "document");
-		const filePath = asStr(rn.file_path ?? rn.path ?? rn.relPath ?? rn.rel_path, "");
+		let filePath = asStr(rn.file_path ?? rn.path ?? rn.relPath ?? rn.rel_path, "");
+		filePath = filePath.replaceAll("\\", "/");
 		let mapped = null;
 		if (kind === "document" || kind === "doc") {
 			const id = nodeId(project, filePath);
@@ -467,7 +468,8 @@ function mapGraphResult(raw, project, seedNodeId, operation, depth) {
 	return assertPayload(payload);
 }
 function mapRawContextResult(raw, project) {
-	const rawPath = asStr(raw.docPath ?? raw.doc_path ?? raw.path ?? raw.id, "");
+	let rawPath = asStr(raw.docPath ?? raw.doc_path ?? raw.path ?? raw.id, "");
+	rawPath = rawPath.replaceAll("\\", "/");
 	const hash = rawPath.indexOf("#");
 	const p = hash === -1 ? rawPath : rawPath.slice(0, hash);
 	const location = asStr(raw.location, rawPath);
@@ -788,7 +790,16 @@ function assertPayload(payload) {
 }
 //#endregion
 //#region src/tool.ts
+/**
+* §7 Node-side tools. All nine docgraph_* tools share one core manager per
+* project root (so IndexState.revision is monotonic per process), validate
+* every path through resolveRelPath, and project `{ kind, payload }` into
+* presentationMeta so the client toolview cards and replay stay stable.
+*/
 const managers = /* @__PURE__ */ new Map();
+function toCorePath(projectRoot, input) {
+	return resolveRelPath(projectRoot, input).split("/").join(sep);
+}
 function managerFor(ctx, projectRoot) {
 	let manager = managers.get(projectRoot);
 	if (!manager) {
@@ -1075,7 +1086,7 @@ function docgraphTools(ctx) {
 			},
 			async execute(args, exec) {
 				const projectRoot = root(exec);
-				const rel = resolveRelPath(projectRoot, reqString(args, "path", "docgraph_node"));
+				const rel = toCorePath(projectRoot, reqString(args, "path", "docgraph_node"));
 				return mapContextResult(await managerFor(ctx, projectRoot).query("docgraph_node", {
 					path: rel,
 					section: optString(args, "section", "") || void 0
@@ -1100,7 +1111,7 @@ function docgraphTools(ctx) {
 				const projectRoot = root(exec);
 				const pathArg = optString(args, "path", "");
 				const coreArgs = { limit: intInRange(args, "limit", 50, 0, 200, "docgraph_files") };
-				if (pathArg !== "") coreArgs.path = resolveRelPath(projectRoot, pathArg);
+				if (pathArg !== "") coreArgs.path = toCorePath(projectRoot, pathArg);
 				return mapFilesResult(await managerFor(ctx, projectRoot).query("docgraph_files", coreArgs, 15e3, exec.signal), project(exec));
 			}
 		}),
@@ -1146,17 +1157,19 @@ function docgraphTools(ctx) {
 				let coreArgs;
 				let depth;
 				let seedFallback;
+				const projectRoot = root(exec);
 				if (operation === "trace") {
 					if (args.document !== void 0) throw new Error("docgraph_graph: document not valid for trace");
+					const from = toCorePath(projectRoot, reqString(args, "from", "docgraph_graph"));
 					coreArgs = {
 						operation,
-						from: reqString(args, "from", "docgraph_graph"),
-						to: reqString(args, "to", "docgraph_graph")
+						from,
+						to: toCorePath(projectRoot, reqString(args, "to", "docgraph_graph"))
 					};
-					seedFallback = coreArgs.from;
+					seedFallback = from.split(sep).join("/");
 				} else {
 					if (args.from !== void 0 || args.to !== void 0) throw new Error("docgraph_graph: from/to only valid for trace");
-					const document = reqString(args, "document", "docgraph_graph");
+					const document = toCorePath(projectRoot, reqString(args, "document", "docgraph_graph"));
 					coreArgs = {
 						operation,
 						document,
@@ -1166,9 +1179,8 @@ function docgraphTools(ctx) {
 						depth = intInRange(args, "depth", 2, 1, 5, "docgraph_graph");
 						coreArgs.depth = depth;
 					}
-					seedFallback = document;
+					seedFallback = document.split(sep).join("/");
 				}
-				const projectRoot = root(exec);
 				const projectName = project(exec);
 				const raw = await managerFor(ctx, projectRoot).query("docgraph_graph", coreArgs, 15e3, exec.signal);
 				return mapGraphResult(raw, projectName, (typeof raw?.seedNodeId === "string" ? raw.seedNodeId : typeof raw?.seed === "string" ? raw.seed : "") || nodeId(projectName, seedFallback), operation, depth);
@@ -1196,7 +1208,7 @@ function docgraphTools(ctx) {
 			async execute(args, exec) {
 				const projectRoot = root(exec);
 				const coreArgs = {
-					document: resolveRelPath(projectRoot, reqString(args, "document", "docgraph_similar")),
+					document: toCorePath(projectRoot, reqString(args, "document", "docgraph_similar")),
 					limit: intInRange(args, "limit", 10, 1, 200, "docgraph_similar"),
 					engine: optString(args, "engine", "auto")
 				};

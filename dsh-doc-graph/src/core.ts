@@ -279,7 +279,7 @@ function nameOf(raw: Raw, p: string): string {
 }
 
 function mapRawDoc(raw: Raw, project: string): DocRecord {
-  const p = asStr(raw.path ?? raw.file_path ?? raw.rel_path ?? raw.relPath, '')
+  const p = asStr(raw.path ?? raw.file_path ?? raw.rel_path ?? raw.relPath, '').replaceAll('\\', '/')
   return {
     id: nodeId(project, p),
     project,
@@ -363,7 +363,7 @@ export function mapGraphResult(
 
   for (const rn of rawNodes) {
     const kind = asStr(rn.kind ?? rn.type, 'document')
-    const filePath = asStr(rn.file_path ?? rn.path ?? rn.relPath ?? rn.rel_path, '')
+    let filePath = asStr(rn.file_path ?? rn.path ?? rn.relPath ?? rn.rel_path, ''); filePath = filePath.replaceAll('\\', '/')
     let mapped: GraphNode | null = null
     if (kind === 'document' || kind === 'doc') {
       const id = nodeId(project, filePath)
@@ -439,7 +439,7 @@ export function mapGraphResult(
 }
 
 function mapRawContextResult(raw: Raw, project: string): ContextPayload['results'][number] {
-  const rawPath = asStr(raw.docPath ?? raw.doc_path ?? raw.path ?? raw.id, '')
+  let rawPath = asStr(raw.docPath ?? raw.doc_path ?? raw.path ?? raw.id, ''); rawPath = rawPath.replaceAll('\\', '/')
   const hash = rawPath.indexOf('#')
   const p = hash === -1 ? rawPath : rawPath.slice(0, hash)
   const location = asStr(raw.location, rawPath)

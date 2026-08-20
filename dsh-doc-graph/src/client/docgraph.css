@@ -303,3 +303,11 @@
 .dsh-docgraph-view-empty p { margin: 0; }
 .dsh-docgraph-view-empty code { font-size: 12px; }
 .dsh-docgraph-view-stack { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px; }
+
+/* Sidebar entry row equal-width fallback (when data-agent classes are absent). */
+[data-dsh-dataagent-entry] .dsh-docgraph-sidebar-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  border-left: 1px solid #8080802e;
+}

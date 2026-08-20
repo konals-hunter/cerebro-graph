@@ -4,6 +4,7 @@
  * every path through resolveRelPath, and project `{ kind, payload }` into
  * presentationMeta so the client toolview cards and replay stay stable.
  */
+import { sep } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import {
   defineTool,
@@ -28,6 +29,11 @@ export const DOCGRAPH_TOOL_NAMES = [
 ] as const
 
 const managers = new Map<string, DocGraphCoreManager>()
+
+function toCorePath(projectRoot: string, input: string): string {
+  const rel = resolveRelPath(projectRoot, input)
+  return rel.split('/').join(sep)
+}
 
 function managerFor(ctx: Context, projectRoot: string): DocGraphCoreManager {
   let manager = managers.get(projectRoot)
@@ -257,7 +263,7 @@ export function docgraphTools(ctx: Context): ToolDefinition[] {
       },
       async execute(args, exec) {
         const projectRoot = root(exec)
-        const rel = resolveRelPath(projectRoot, reqString(args, 'path', 'docgraph_node'))
+        const rel = toCorePath(projectRoot, reqString(args, 'path', 'docgraph_node'))
         const raw = await managerFor(ctx, projectRoot).query('docgraph_node', { path: rel, section: optString(args, 'section', '') || undefined }, 15000, exec.signal)
         return mapContextResult(raw, project(exec))
       },
@@ -275,7 +281,7 @@ export function docgraphTools(ctx: Context): ToolDefinition[] {
         const projectRoot = root(exec)
         const pathArg = optString(args, 'path', '')
         const coreArgs: Record<string, unknown> = { limit: intInRange(args, 'limit', 50, 0, 200, 'docgraph_files') }
-        if (pathArg !== '') coreArgs.path = resolveRelPath(projectRoot, pathArg)
+        if (pathArg !== '') coreArgs.path = toCorePath(projectRoot, pathArg)
         const raw = await managerFor(ctx, projectRoot).query('docgraph_files', coreArgs, 15000, exec.signal)
         return mapFilesResult(raw, project(exec))
       },
@@ -300,21 +306,23 @@ export function docgraphTools(ctx: Context): ToolDefinition[] {
         let coreArgs: Record<string, unknown>
         let depth: number | undefined
         let seedFallback: string
+        const projectRoot = root(exec)
         if (operation === 'trace') {
           if (args.document !== undefined) throw new Error('docgraph_graph: document not valid for trace')
-          coreArgs = { operation, from: reqString(args, 'from', 'docgraph_graph'), to: reqString(args, 'to', 'docgraph_graph') }
-          seedFallback = coreArgs.from as string
+          const from = toCorePath(projectRoot, reqString(args, 'from', 'docgraph_graph'))
+          const to = toCorePath(projectRoot, reqString(args, 'to', 'docgraph_graph'))
+          coreArgs = { operation, from, to }
+          seedFallback = from.split(sep).join('/')
         } else {
           if (args.from !== undefined || args.to !== undefined) throw new Error('docgraph_graph: from/to only valid for trace')
-          const document = reqString(args, 'document', 'docgraph_graph')
+          const document = toCorePath(projectRoot, reqString(args, 'document', 'docgraph_graph'))
           coreArgs = { operation, document, limit: intInRange(args, 'limit', 10, 0, 200, 'docgraph_graph') }
           if (operation === 'impact') {
             depth = intInRange(args, 'depth', 2, 1, 5, 'docgraph_graph')
             coreArgs.depth = depth
           }
-          seedFallback = document
+          seedFallback = document.split(sep).join('/')
         }
-        const projectRoot = root(exec)
         const projectName = project(exec)
         const raw = await managerFor(ctx, projectRoot).query<Record<string, unknown>>('docgraph_graph', coreArgs, 15000, exec.signal)
         const rawSeed = typeof raw?.seedNodeId === 'string' ? raw.seedNodeId : typeof raw?.seed === 'string' ? raw.seed : ''
@@ -335,7 +343,7 @@ export function docgraphTools(ctx: Context): ToolDefinition[] {
       async execute(args, exec) {
         const projectRoot = root(exec)
         const coreArgs = {
-          document: resolveRelPath(projectRoot, reqString(args, 'document', 'docgraph_similar')),
+          document: toCorePath(projectRoot, reqString(args, 'document', 'docgraph_similar')),
           limit: intInRange(args, 'limit', 10, 1, 200, 'docgraph_similar'),
           engine: optString(args, 'engine', 'auto'),
         }
