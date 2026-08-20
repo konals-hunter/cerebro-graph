@@ -59,6 +59,31 @@ export function DocGraphDrawer({ sessionId: rawSessionId, useSessions }: DrawerP
     }
   }
 
+  const loadGraph = async (document: string) => {
+    if (!cwd || !document) return
+    setBusy(true)
+    try {
+      const resp = await fetch('/api/dsh-doc-graph/graph?cwd=' + encodeURIComponent(cwd), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ operation: 'impact', document, depth: 1, limit: 10 }),
+      })
+      if (resp.ok) {
+        const data = await resp.json() as { payload?: unknown }
+        applyPayload(data.payload)
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const loadGraphByDocId = (id: string) => {
+    const doc = indexPayload?.docs.find((d) => d.id === id)
+    if (doc) void loadGraph(doc.path)
+  }
+
   const initIndex = async () => {
     if (!cwd) return
     setBusy(true)
@@ -128,13 +153,13 @@ export function DocGraphDrawer({ sessionId: rawSessionId, useSessions }: DrawerP
               ? (
                   <>
                     <div className="dsh-docgraph-view-actions">
-                      <button type="button" className="dsh-docgraph-primary-btn" disabled={!firstDoc} onClick={() => firstDoc && ui.focusNode(sessionId, firstDoc)}>
+                      <button type="button" className="dsh-docgraph-primary-btn" disabled={!firstDoc} onClick={() => firstDoc && void loadGraph(firstDoc)}>
                         加载图谱
                       </button>
                       <span className="dsh-docgraph-view-hint">从项目文档列表选择一个文档展开图谱</span>
                     </div>
                     <OverviewSection summary={indexPayload.summary} />
-                    <DocListSection docs={indexPayload.docs} onFocus={(id) => ui.focusNode(sessionId, id)} />
+                    <DocListSection docs={indexPayload.docs} onFocus={loadGraphByDocId} />
                   </>
                 )
               : (
