@@ -119,7 +119,7 @@ export function apply(ctx: ClientContext): () => void {
   }
 
   ctx.slots.inject('conversation.view', () =>
-    ctx.slots.register({ name: 'conversation.view', id: 'docgraph', label: '文档图谱', order: 20 }, DocGraphView),
+    ctx.slots.register({ name: 'conversation.view', id: 'docgraph', order: 20, label: () => '文档图谱' }, DocGraphView),
   )
 
   ctx.slots.inject('conversation.input.dock', () => {
