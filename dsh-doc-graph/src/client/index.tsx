@@ -1,7 +1,8 @@
 /**
  * dsh-doc-graph, browser half: nine toolview keys, the input dock, and the
- * graph drawer overlay (mounted as a second dock-list entry with fixed
- * positioning). Optional topbar / sidebar entrances degrade to the dock.
+ * graph drawer overlay. The sidebar entrance is mounted at the sidebar entry
+ * row (replacing the deprecated dsh-data-agent-x "预览" entry position), and
+ * the composer dock only renders once an index/graph payload exists.
  */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type {} from '@deepseek-ai/dsh-client-ui-tool/client'
@@ -14,7 +15,7 @@ import { docGraphStore, useDocGraphUI } from './DocGraphUIContext.js'
 import './docgraph.css'
 
 export const name = 'dsh-doc-graph'
-export const inject = ['slots']
+export const inject = ['slots', 'sessions']
 
 const TOOL_NAMES = [
   'docgraph_index', 'docgraph_status', 'docgraph_context', 'docgraph_search',
@@ -29,10 +30,75 @@ function TopbarButton({ sessionId: rawSessionId }: PropsRuntime<'conversation.se
   return <button type="button" className="dsh-docgraph-topbar-btn" onClick={() => ui.openDrawer(sessionId)}>图谱</button>
 }
 
-function SidebarButton({ sessionId: rawSessionId }: SessionSlotProps) {
-  const ui = useDocGraphUI()
-  const sessionId = rawSessionId ?? 'default'
-  return <button type="button" className="dsh-docgraph-sidebar-btn" onClick={() => ui.openDrawer(sessionId)}>文档图谱</button>
+const SIDEBAR_ICON = "<svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"5.5\" cy=\"5\" r=\"2.2\"/><circle cx=\"10.5\" cy=\"4\" r=\"1.7\"/><circle cx=\"11\" cy=\"10\" r=\"2.2\"/><path d=\"M7.4 6.4 9 4.9M7.6 6.8l2 2.1M5.5 7.2v2.4\"/></svg>"
+
+function sidebarRoot(): Element | null {
+  const column = document.querySelector('[data-pane="sidebar"], [class*="sidebarCol"]')
+  if (!(column instanceof HTMLElement)) return null
+  return column.querySelector('[class*="logoRow"]')?.parentElement ?? column.firstElementChild as Element ?? null
+}
+
+function placeSidebarButton(root: Element, button: HTMLButtonElement): boolean {
+  if (!root.isConnected) return false
+  const dataAgentRow = root.querySelector('[data-dsh-dataagent-entry]')
+  if (dataAgentRow instanceof HTMLElement) {
+    const preview = dataAgentRow.querySelector('[data-dsh-dataagent-preview]')
+    dataAgentRow.insertBefore(button, preview ?? null)
+    return true
+  }
+  const newSession = root.querySelector('button[class*="newSession"]')
+  const logoRow = newSession?.closest('[class*="logoRow"]')
+  const anchor = logoRow ?? newSession ?? root.firstElementChild
+  root.insertBefore(button, anchor?.nextElementSibling ?? null)
+  return true
+}
+
+function mountSidebarEntry(ctx: ClientContext): () => void {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'dsh-docgraph-sidebar-btn'
+  button.setAttribute('aria-label', '文档图谱')
+  button.setAttribute('title', '文档图谱：索引状态与 2D/3D 图谱面板')
+  button.innerHTML = '<span class="dsh-docgraph-sidebar-icon">' + SIDEBAR_ICON + '</span><span class="dsh-docgraph-sidebar-label">文档图谱</span>'
+  button.addEventListener('click', () => {
+    const current = ctx.sessions.list.getSnapshot().current
+    docGraphStore.openDrawer(current ?? 'default')
+  })
+
+  let root: Element | null = null
+  let placed = false
+  const tryPlace = () => {
+    if (root !== null && !root.isConnected) {
+      root = null
+      placed = false
+    }
+    if (placed) {
+      if (document.body.contains(button)) return
+      root = null
+      placed = false
+    }
+    root ??= sidebarRoot()
+    if (root === null) return
+    placed = placeSidebarButton(root, button)
+    if (placed) rootObserver.observe(root, { childList: true, subtree: true })
+  }
+  const waitObserver = new MutationObserver(tryPlace)
+  const rootObserver = new MutationObserver(() => {
+    if (root === null || !root.isConnected) {
+      placed = false
+      tryPlace()
+    } else if (!document.body.contains(button)) {
+      placed = false
+      tryPlace()
+    }
+  })
+  waitObserver.observe(document.body, { childList: true, subtree: true })
+  tryPlace()
+  return () => {
+    waitObserver.disconnect()
+    rootObserver.disconnect()
+    button.remove()
+  }
 }
 
 export function apply(ctx: ClientContext): () => void {
@@ -51,22 +117,17 @@ export function apply(ctx: ClientContext): () => void {
     }
   })
 
-  // Optional host entrances (R-015): skip silently when the slot is undeclared.
+  const disposeSidebar = mountSidebarEntry(ctx)
+
+  // Optional host entrance (R-015): skip silently when the slot is undeclared.
   try {
     ctx.slots.inject('conversation.session.header.actions', () =>
       ctx.slots.register({ name: 'conversation.session.header.actions', id: 'docgraph-topbar', order: 60 }, TopbarButton),
     )
   } catch { /* topbar slot not declared */ }
-  try {
-    ;(ctx.slots as unknown as { inject: (name: string, cb: () => () => void) => void }).inject('sidebar.footer.action', () => {
-      return (ctx.slots as unknown as { register: (spec: object, comp: unknown) => () => void }).register(
-        { name: 'sidebar.footer.action', id: 'docgraph-sidebar' },
-        SidebarButton,
-      )
-    })
-  } catch { /* sidebar slot not declared */ }
 
   return () => {
+    disposeSidebar()
     docGraphStore.clear()
   }
 }

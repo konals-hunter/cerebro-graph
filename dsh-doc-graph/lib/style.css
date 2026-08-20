@@ -7,11 +7,22 @@
   color: var(--dsw-alias-label-primary);
   border: 1px solid var(--dsw-alias-border-l2);
   background: var(--dsw-alias-bg-layer-1);
-  border-radius: 10px;
-  align-items: center;
-  gap: 8px;
+  border-radius: 999px;
   padding: 6px 10px;
   font-size: 13px;
+}
+
+.dsh-docgraph-dock-main {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  background: none;
+  border: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
   display: flex;
 }
 
@@ -20,21 +31,13 @@
   white-space: nowrap;
   color: var(--dsw-alias-label-caption);
   flex: 1;
+  font-size: 12px;
   overflow: hidden;
 }
 
-.dsh-docgraph-dock-btn {
-  border: 1px solid var(--dsw-alias-border-l2);
-  color: var(--dsw-alias-label-primary);
-  cursor: pointer;
-  background: none;
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 12px;
-}
-
-.dsh-docgraph-dock-hint {
-  color: var(--dsw-alias-brand-primary-new-colorprimary-new-color);
+.dsh-docgraph-dock-open {
+  color: var(--dsw-alias-brand-primary-new-colorprimary-new-color, #1f6c9f);
+  white-space: nowrap;
   font-size: 12px;
 }
 
@@ -43,6 +46,13 @@
   padding: 1px 8px;
   font-size: 11px;
   font-weight: 600;
+}
+
+.dsh-docgraph-phase-dot {
+  border-radius: 50%;
+  flex: none;
+  width: 8px;
+  height: 8px;
 }
 
 .dsh-docgraph-phase.phase-ready {
@@ -63,6 +73,72 @@
 .dsh-docgraph-phase.phase-error {
   color: #b34040;
   background: #fdecec;
+}
+
+.dsh-docgraph-phase-dot.phase-ready {
+  background: #2e7d43;
+}
+
+.dsh-docgraph-phase-dot.phase-indexing {
+  background: #c18a3d;
+}
+
+.dsh-docgraph-phase-dot.phase-starting {
+  background: #6f96ab;
+}
+
+.dsh-docgraph-phase-dot.phase-error {
+  background: #b34040;
+}
+
+[data-dsh-dataagent-preview] {
+  display: none !important;
+}
+
+.dsh-docgraph-sidebar-btn {
+  width: 100%;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0;
+  padding: 6px 8px;
+  font-size: 13px;
+  display: flex;
+}
+
+.dsh-docgraph-sidebar-btn:hover {
+  background: var(--dsw-alias-bg-hover, #0000000d);
+}
+
+.dsh-docgraph-sidebar-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--dsw-alias-label-secondary);
+  flex: none;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.dsh-docgraph-sidebar-label {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.dsh-docgraph-topbar-btn {
+  border: 1px solid var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+  background: none;
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 12px;
 }
 
 .dsh-docgraph-card {

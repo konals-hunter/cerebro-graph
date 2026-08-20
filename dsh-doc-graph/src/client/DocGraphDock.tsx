@@ -1,12 +1,10 @@
 /**
- * §9.2 input dock: four-phase state + root/docs/nodes/edges stats + two
- * buttons. MVP has no follow-up channel for the status button, so the button
- * falls back to an inline hint (spec §10.2 toast degradation).
+ * §9.2 input dock, compact edition: only rendered once an index or graph
+ * payload exists in the session store. The whole pill is one button that
+ * opens the graph drawer — no bare "状态"/"面板" controls in the composer.
  */
-import { useState } from 'react'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { useDocGraphUI, useSessionGraphState } from './DocGraphUIContext.js'
-import type { IndexPayload } from '../types.js'
 
 type DockProps = PropsRuntime<'conversation.input.dock'> & { sessionId?: string }
 
@@ -21,30 +19,25 @@ export function DocGraphDock({ sessionId: rawSessionId }: DockProps) {
   const sessionId = rawSessionId ?? 'default'
   const ui = useDocGraphUI()
   const state = useSessionGraphState(sessionId)
-  const [hint, setHint] = useState('')
+  const payload = state.activePayload
 
-  const indexPayload: IndexPayload | null = state.activePayload?.kind === 'docgraph_status' || state.activePayload?.kind === 'docgraph_index'
-    ? state.activePayload
-    : null
-  const phase = indexPayload?.state.phase ?? 'starting'
+  const indexPayload = payload?.kind === 'docgraph_index' || payload?.kind === 'docgraph_status' ? payload : null
+  const graphPayload = payload?.kind === 'docgraph_graph' ? payload : null
+  if (!indexPayload && !graphPayload) return null
+
+  const phase = indexPayload?.state.phase ?? 'ready'
   const stats = indexPayload
-    ? `${indexPayload.rootPath} · ${indexPayload.summary.docs} 文档 · ${indexPayload.summary.nodes} 节点 · ${indexPayload.summary.edges} 边`
-    : '尚未索引'
-
-  const onStatus = () => {
-    setHint('请直接询问图谱状态')
-    window.setTimeout(() => setHint(''), 2000)
-  }
-
-  const onPanel = () => ui.openDrawer(sessionId, state.activePayload ?? undefined)
+    ? `${indexPayload.summary.docs} 文档 · ${indexPayload.summary.nodes} 节点 · ${indexPayload.summary.edges} 边`
+    : `${graphPayload?.nodes.length ?? 0} 节点 · ${graphPayload?.links.length ?? 0} 边`
 
   return (
     <div className="dsh-docgraph-dock" role="status">
-      <span className={`dsh-docgraph-phase phase-${phase}`}>{PHASE_TEXT[phase] ?? phase}</span>
-      <span className="dsh-docgraph-dock-stats">{stats}</span>
-      <button type="button" className="dsh-docgraph-dock-btn" onClick={onStatus}>状态</button>
-      <button type="button" className="dsh-docgraph-dock-btn" onClick={onPanel}>面板</button>
-      {hint ? <span className="dsh-docgraph-dock-hint">{hint}</span> : null}
+      <button type="button" className="dsh-docgraph-dock-main" onClick={() => ui.openDrawer(sessionId, payload ?? undefined)}>
+        <span className={`dsh-docgraph-phase-dot phase-${phase}`} aria-hidden="true" />
+        <span className={`dsh-docgraph-phase phase-${phase}`}>{PHASE_TEXT[phase] ?? phase}</span>
+        <span className="dsh-docgraph-dock-stats">{stats}</span>
+        <span className="dsh-docgraph-dock-open">打开图谱</span>
+      </button>
     </div>
   )
 }
