@@ -311,3 +311,16 @@
   width: auto;
   border-left: 1px solid #8080802e;
 }
+
+.dsh-docgraph-view-actions { display: flex; align-items: center; gap: 10px; }
+.dsh-docgraph-primary-btn {
+  border: 1px solid var(--business, #163b5c);
+  background: #163b5c;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.dsh-docgraph-primary-btn:hover { filter: brightness(1.08); }
+.dsh-docgraph-view-hint { font-size: 12px; color: var(--dsw-alias-label-caption); }
