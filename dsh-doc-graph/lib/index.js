@@ -1320,6 +1320,28 @@ function docGraphRoutes(ctx) {
 	return [
 		{
 			kind: "exact",
+			path: "/api/dsh-doc-graph/files",
+			handler: async (req, res) => {
+				if (req.method !== "GET") {
+					writeJson(res, 405, { error: "method not allowed" });
+					return;
+				}
+				const cwd = cwdOf(req);
+				if (cwd === null) {
+					writeJson(res, 400, { error: "cwd query parameter is required" });
+					return;
+				}
+				try {
+					const manager = managerFor(ctx, cwd);
+					await manager.ensureServing(3e4);
+					writeJson(res, 200, { payload: mapFilesResult(await manager.query("docgraph_files", { limit: 200 }, 3e4), projectNameOf(cwd)) });
+				} catch (error) {
+					writeJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+				}
+			}
+		},
+		{
+			kind: "exact",
 			path: "/api/dsh-doc-graph/status",
 			handler: async (req, res) => {
 				if (req.method !== "GET") {

@@ -1,17 +1,84 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { useDocGraphUI, useSessionGraphState } from '../DocGraphUIContext.js'
+import { isDocGraphPayload } from '../../types.js'
 import { GraphWorkspace } from './graph/GraphWorkspace.js'
 import { OverviewSection } from './OverviewSection.js'
 import { DocListSection } from './DocListSection.js'
-import type { DocGraphPayload } from '../../types.js'
 
 type DrawerProps = PropsRuntime<'conversation.input.dock'> & { sessionId?: string }
 
-export function DocGraphDrawer({ sessionId: rawSessionId }: DrawerProps) {
+export function DocGraphDrawer({ sessionId: rawSessionId, useSessions }: DrawerProps) {
   const sessionId = rawSessionId ?? 'default'
   const ui = useDocGraphUI()
   const state = useSessionGraphState(sessionId)
+  const sessionList = useSessions((s) => s)
+  const cwd = sessionList?.current ? sessionList.byId[sessionList.current]?.cwd : undefined
+  const [busy, setBusy] = useState(false)
+
+  const applyPayload = (payload: unknown) => {
+    if (isDocGraphPayload(payload)) ui.setPayload(sessionId, payload)
+  }
+
+  const refresh = async () => {
+    if (!cwd) return
+    setBusy(true)
+    try {
+      const statusResp = await fetch('/api/dsh-doc-graph/status?cwd=' + encodeURIComponent(cwd))
+      if (!statusResp.ok) return
+      const statusData = await statusResp.json() as { payload?: unknown }
+      const statusPayload = statusData.payload
+      applyPayload(statusPayload)
+
+      const filesResp = await fetch('/api/dsh-doc-graph/files?cwd=' + encodeURIComponent(cwd))
+      if (filesResp.ok) {
+        const filesData = await filesResp.json() as { payload?: unknown }
+        if (isDocGraphPayload(filesData.payload) && filesData.payload.kind === 'docgraph_files') {
+          const indexPayload = isDocGraphPayload(statusPayload) && (statusPayload.kind === 'docgraph_index' || statusPayload.kind === 'docgraph_status')
+            ? { ...statusPayload, docs: filesData.payload.files }
+            : statusPayload
+          applyPayload(indexPayload)
+          const firstDoc = filesData.payload.files[0]?.path
+          if (firstDoc) {
+            const graphResp = await fetch('/api/dsh-doc-graph/graph?cwd=' + encodeURIComponent(cwd), {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ operation: 'impact', document: firstDoc, depth: 1, limit: 10 }),
+            })
+            if (graphResp.ok) {
+              const graphData = await graphResp.json() as { payload?: unknown }
+              applyPayload(graphData.payload)
+            }
+          }
+        }
+      }
+    } catch {
+      /* direct API unavailable; keep any existing store payload */
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const initIndex = async () => {
+    if (!cwd) return
+    setBusy(true)
+    try {
+      const resp = await fetch('/api/dsh-doc-graph/index?cwd=' + encodeURIComponent(cwd), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ force: false }),
+      })
+      if (resp.ok) {
+        const data = await resp.json() as { payload?: unknown }
+        applyPayload(data.payload)
+      }
+      await refresh()
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false)
+    }
+  }
 
   useEffect(() => {
     if (!state.drawerOpen) return
@@ -22,12 +89,18 @@ export function DocGraphDrawer({ sessionId: rawSessionId }: DrawerProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [state.drawerOpen, sessionId, ui])
 
+  useEffect(() => {
+    if (state.drawerOpen && !state.activePayload && cwd) {
+      void refresh()
+    }
+  }, [state.drawerOpen, cwd, state.activePayload])
+
   if (!state.drawerOpen) return null
 
-  const indexPayload: Extract<DocGraphPayload, { kind: 'docgraph_index' | 'docgraph_status' }> | null =
-    state.activePayload?.kind === 'docgraph_index' || state.activePayload?.kind === 'docgraph_status'
-      ? state.activePayload
-      : null
+  const payload = state.activePayload
+  const indexPayload = payload?.kind === 'docgraph_index' || payload?.kind === 'docgraph_status' ? payload : null
+  const graphPayload = payload?.kind === 'docgraph_graph' ? payload : null
+  const firstDoc = indexPayload?.docs[0]?.path
 
   return (
     <div className="dsh-docgraph-drawer-mask" onClick={() => ui.closeDrawer(sessionId)}>
@@ -48,11 +121,31 @@ export function DocGraphDrawer({ sessionId: rawSessionId }: DrawerProps) {
           <button type="button" className="dsh-docgraph-close" aria-label="关闭" onClick={() => ui.closeDrawer(sessionId)}>✕</button>
         </div>
         <div className="dr-bd">
-          <GraphWorkspace sessionId={sessionId} />
-          {indexPayload
-            ? <OverviewSection summary={indexPayload.summary} />
-            : <section className="dsh-docgraph-section"><h2>总览</h2><p className="dsh-docgraph-foot">尚无索引状态</p></section>}
-          <DocListSection docs={indexPayload?.docs ?? []} onFocus={(id) => ui.focusNode(sessionId, id)} />
+          {busy ? <p className="dsh-docgraph-foot">正在读取本地图谱…</p> : null}
+          {graphPayload
+            ? <GraphWorkspace sessionId={sessionId} />
+            : indexPayload
+              ? (
+                  <>
+                    <div className="dsh-docgraph-view-actions">
+                      <button type="button" className="dsh-docgraph-primary-btn" disabled={!firstDoc} onClick={() => firstDoc && ui.focusNode(sessionId, firstDoc)}>
+                        加载图谱
+                      </button>
+                      <span className="dsh-docgraph-view-hint">从项目文档列表选择一个文档展开图谱</span>
+                    </div>
+                    <OverviewSection summary={indexPayload.summary} />
+                    <DocListSection docs={indexPayload.docs} onFocus={(id) => ui.focusNode(sessionId, id)} />
+                  </>
+                )
+              : (
+                  <div className="dsh-docgraph-view-empty">
+                    <b>文档图谱</b>
+                    <p>还没有索引。初始化当前项目索引后即可浏览文档并展开图谱。</p>
+                    <button type="button" className="dsh-docgraph-primary-btn" onClick={() => void initIndex()}>
+                      初始化文档图谱
+                    </button>
+                  </div>
+                )}
         </div>
       </div>
     </div>

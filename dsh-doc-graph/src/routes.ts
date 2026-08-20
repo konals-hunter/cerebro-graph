@@ -6,7 +6,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Context } from '@deepseek-ai/cordis'
 import type { WebRoute } from '@deepseek-ai/dsh-host-webserver'
-import { DocGraphCoreManager, mapGraphResult } from './core.js'
+import { DocGraphCoreManager, mapFilesResult, mapGraphResult } from './core.js'
 import { nodeId } from './types.js'
 
 const managers = new Map<string, DocGraphCoreManager>()
@@ -55,6 +55,24 @@ async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknow
 
 export function docGraphRoutes(ctx: Context): WebRoute[] {
   return [
+    {
+      kind: 'exact',
+      path: '/api/dsh-doc-graph/files',
+      handler: async (req, res) => {
+        if (req.method !== 'GET') { writeJson(res, 405, { error: 'method not allowed' }); return }
+        const cwd = cwdOf(req)
+        if (cwd === null) { writeJson(res, 400, { error: 'cwd query parameter is required' }); return }
+        try {
+          const manager = managerFor(ctx, cwd)
+          await manager.ensureServing(30000)
+          const raw = await manager.query<Record<string, unknown>>('docgraph_files', { limit: 200 }, 30000)
+          const payload = mapFilesResult(raw, projectNameOf(cwd))
+          writeJson(res, 200, { payload })
+        } catch (error) {
+          writeJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
+        }
+      },
+    },
     {
       kind: 'exact',
       path: '/api/dsh-doc-graph/status',
