@@ -46,6 +46,7 @@ function placeSidebarButton(root: Element, button: HTMLButtonElement): boolean {
   if (dataAgentRow instanceof HTMLElement) {
     const preview = dataAgentRow.querySelector('[data-dsh-dataagent-preview]')
     dataAgentRow.insertBefore(button, preview ?? null)
+    if (preview instanceof HTMLElement) preview.remove()
     return true
   }
   const newSession = root.querySelector('button[class*="newSession"]')
@@ -56,8 +57,10 @@ function placeSidebarButton(root: Element, button: HTMLButtonElement): boolean {
 }
 
 function mountSidebarEntry(ctx: ClientContext): () => void {
+  document.querySelectorAll('[data-dsh-docgraph-sidebar]').forEach((el) => el.remove())
   const button = document.createElement('button')
   button.type = 'button'
+  button.dataset.dshDocgraphSidebar = ''
   button.setAttribute('aria-label', '文档图谱')
   button.setAttribute('title', '文档图谱：索引状态与 2D/3D 图谱面板')
   cloneEntryClasses(button)
