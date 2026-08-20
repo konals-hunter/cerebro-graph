@@ -796,19 +796,19 @@ function assertPayload(payload) {
 * every path through resolveRelPath, and project `{ kind, payload }` into
 * presentationMeta so the client toolview cards and replay stay stable.
 */
-const managers = /* @__PURE__ */ new Map();
+const managers$1 = /* @__PURE__ */ new Map();
 function toCorePath(projectRoot, input) {
 	return resolveRelPath(projectRoot, input).split("/").join(sep);
 }
-function managerFor(ctx, projectRoot) {
-	let manager = managers.get(projectRoot);
+function managerFor$1(ctx, projectRoot) {
+	let manager = managers$1.get(projectRoot);
 	if (!manager) {
 		manager = new DocGraphCoreManager(ctx, projectRoot);
-		managers.set(projectRoot, manager);
+		managers$1.set(projectRoot, manager);
 	}
 	return manager;
 }
-function projectNameOf(root) {
+function projectNameOf$1(root) {
 	return root.split(/[\\/]/).filter(Boolean).pop() ?? root;
 }
 function optString(args, key, fallback = "") {
@@ -937,7 +937,7 @@ const DESCRIPTIONS = {
 };
 function docgraphTools(ctx) {
 	const root = (exec) => getProjectRoot(ctx, exec);
-	const project = (exec) => projectNameOf(root(exec));
+	const project = (exec) => projectNameOf$1(root(exec));
 	return [
 		docGraphTool({
 			name: "docgraph_index",
@@ -957,7 +957,7 @@ function docgraphTools(ctx) {
 				const pathArg = optString(args, "path", ".");
 				if (pathArg !== "." && pathArg !== "") throw new Error("docgraph_index: MVP 仅支持索引项目根目录");
 				return {
-					...await managerFor(ctx, root(exec)).index(boolArg(args, "force", false)),
+					...await managerFor$1(ctx, root(exec)).index(boolArg(args, "force", false)),
 					kind: "docgraph_index"
 				};
 			}
@@ -975,7 +975,7 @@ function docgraphTools(ctx) {
 			async execute(args, exec) {
 				const pathArg = optString(args, "path", ".");
 				if (pathArg !== "." && pathArg !== "") throw new Error("docgraph_status: MVP 仅支持索引项目根目录");
-				return managerFor(ctx, root(exec)).status();
+				return managerFor$1(ctx, root(exec)).status();
 			}
 		}),
 		docGraphTool({
@@ -1027,7 +1027,7 @@ function docgraphTools(ctx) {
 					referenceLimit: intInRange(args, "referenceLimit", 5, 1, 20, "docgraph_context"),
 					...pickFilters(args)
 				};
-				const raw = await managerFor(ctx, root(exec)).query("docgraph_context", coreArgs, 15e3, exec.signal);
+				const raw = await managerFor$1(ctx, root(exec)).query("docgraph_context", coreArgs, 15e3, exec.signal);
 				return format === "drift_audit" ? mapDriftResult(raw, project(exec)) : mapContextResult(raw, project(exec));
 			}
 		}),
@@ -1066,7 +1066,7 @@ function docgraphTools(ctx) {
 					entity_id: optString(args, "entity_id", ""),
 					...pickFilters(args)
 				};
-				return mapContextResult(await managerFor(ctx, root(exec)).query("docgraph_search", coreArgs, 15e3, exec.signal), project(exec));
+				return mapContextResult(await managerFor$1(ctx, root(exec)).query("docgraph_search", coreArgs, 15e3, exec.signal), project(exec));
 			}
 		}),
 		docGraphTool({
@@ -1087,7 +1087,7 @@ function docgraphTools(ctx) {
 			async execute(args, exec) {
 				const projectRoot = root(exec);
 				const rel = toCorePath(projectRoot, reqString(args, "path", "docgraph_node"));
-				return mapContextResult(await managerFor(ctx, projectRoot).query("docgraph_node", {
+				return mapContextResult(await managerFor$1(ctx, projectRoot).query("docgraph_node", {
 					path: rel,
 					section: optString(args, "section", "") || void 0
 				}, 15e3, exec.signal), project(exec));
@@ -1112,7 +1112,7 @@ function docgraphTools(ctx) {
 				const pathArg = optString(args, "path", "");
 				const coreArgs = { limit: intInRange(args, "limit", 50, 0, 200, "docgraph_files") };
 				if (pathArg !== "") coreArgs.path = toCorePath(projectRoot, pathArg);
-				return mapFilesResult(await managerFor(ctx, projectRoot).query("docgraph_files", coreArgs, 15e3, exec.signal), project(exec));
+				return mapFilesResult(await managerFor$1(ctx, projectRoot).query("docgraph_files", coreArgs, 15e3, exec.signal), project(exec));
 			}
 		}),
 		docGraphTool({
@@ -1182,7 +1182,7 @@ function docgraphTools(ctx) {
 					seedFallback = document.split(sep).join("/");
 				}
 				const projectName = project(exec);
-				const raw = await managerFor(ctx, projectRoot).query("docgraph_graph", coreArgs, 15e3, exec.signal);
+				const raw = await managerFor$1(ctx, projectRoot).query("docgraph_graph", coreArgs, 15e3, exec.signal);
 				return mapGraphResult(raw, projectName, (typeof raw?.seedNodeId === "string" ? raw.seedNodeId : typeof raw?.seed === "string" ? raw.seed : "") || nodeId(projectName, seedFallback), operation, depth);
 			}
 		}),
@@ -1212,7 +1212,7 @@ function docgraphTools(ctx) {
 					limit: intInRange(args, "limit", 10, 1, 200, "docgraph_similar"),
 					engine: optString(args, "engine", "auto")
 				};
-				return mapContextResult(await managerFor(ctx, projectRoot).query("docgraph_similar", coreArgs, 15e3, exec.signal), project(exec));
+				return mapContextResult(await managerFor$1(ctx, projectRoot).query("docgraph_similar", coreArgs, 15e3, exec.signal), project(exec));
 			}
 		}),
 		docGraphTool({
@@ -1228,7 +1228,7 @@ function docgraphTools(ctx) {
 			async execute(args, exec) {
 				const coreArgs = {};
 				if (optString(args, "tag", "") !== "") coreArgs.tag = optString(args, "tag", "");
-				return mapContextResult(await managerFor(ctx, root(exec)).query("docgraph_tags", coreArgs, 15e3, exec.signal), project(exec));
+				return mapContextResult(await managerFor$1(ctx, root(exec)).query("docgraph_tags", coreArgs, 15e3, exec.signal), project(exec));
 			}
 		})
 	];
@@ -1275,12 +1275,173 @@ const docGraphSkillProvider = {
 	}
 };
 //#endregion
+//#region src/routes.ts
+const managers = /* @__PURE__ */ new Map();
+function managerFor(ctx, cwd) {
+	let manager = managers.get(cwd);
+	if (!manager) {
+		manager = new DocGraphCoreManager(ctx, cwd);
+		managers.set(cwd, manager);
+	}
+	return manager;
+}
+function projectNameOf(cwd) {
+	return cwd.replace(/[\\/]+$/, "").split(/[\\/]/).filter(Boolean).pop() ?? cwd;
+}
+function writeJson(res, status, body) {
+	res.writeHead(status, {
+		"content-type": "application/json; charset=utf-8",
+		"referrer-policy": "no-referrer"
+	});
+	res.end(JSON.stringify(body));
+}
+function cwdOf(req) {
+	const cwd = new URL(req.url ?? "/", "http://localhost").searchParams.get("cwd");
+	if (!cwd || cwd.trim() === "") return null;
+	return cwd.trim();
+}
+async function readJsonBody(req) {
+	const chunks = [];
+	let size = 0;
+	for await (const chunk of req) {
+		const buffer = chunk;
+		size += buffer.length;
+		if (size > 65536) return null;
+		chunks.push(buffer);
+	}
+	try {
+		const parsed = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+		return typeof parsed === "object" && parsed !== null ? parsed : null;
+	} catch {
+		return null;
+	}
+}
+function docGraphRoutes(ctx) {
+	return [
+		{
+			kind: "exact",
+			path: "/api/dsh-doc-graph/status",
+			handler: async (req, res) => {
+				if (req.method !== "GET") {
+					writeJson(res, 405, { error: "method not allowed" });
+					return;
+				}
+				const cwd = cwdOf(req);
+				if (cwd === null) {
+					writeJson(res, 400, { error: "cwd query parameter is required" });
+					return;
+				}
+				try {
+					const manager = managerFor(ctx, cwd);
+					await manager.ensureServing(3e4);
+					writeJson(res, 200, { payload: await manager.status(15e3) });
+				} catch (error) {
+					writeJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+				}
+			}
+		},
+		{
+			kind: "exact",
+			path: "/api/dsh-doc-graph/index",
+			handler: async (req, res) => {
+				if (req.method !== "POST") {
+					writeJson(res, 405, { error: "method not allowed" });
+					return;
+				}
+				const cwd = cwdOf(req);
+				if (cwd === null) {
+					writeJson(res, 400, { error: "cwd query parameter is required" });
+					return;
+				}
+				const force = (await readJsonBody(req))?.force === true;
+				try {
+					writeJson(res, 200, { payload: await managerFor(ctx, cwd).index(force) });
+				} catch (error) {
+					writeJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+				}
+			}
+		},
+		{
+			kind: "exact",
+			path: "/api/dsh-doc-graph/graph",
+			handler: async (req, res) => {
+				if (req.method !== "POST") {
+					writeJson(res, 405, { error: "method not allowed" });
+					return;
+				}
+				const cwd = cwdOf(req);
+				if (cwd === null) {
+					writeJson(res, 400, { error: "cwd query parameter is required" });
+					return;
+				}
+				const body = await readJsonBody(req);
+				const operation = typeof body?.operation === "string" ? body.operation : "impact";
+				if (![
+					"incoming",
+					"outgoing",
+					"impact",
+					"trace"
+				].includes(operation)) {
+					writeJson(res, 400, { error: "invalid operation" });
+					return;
+				}
+				try {
+					const manager = managerFor(ctx, cwd);
+					await manager.ensureServing(3e4);
+					const coreArgs = { operation };
+					let seedFallback = "";
+					if (operation === "trace") {
+						const from = typeof body?.from === "string" ? body.from : "";
+						const to = typeof body?.to === "string" ? body.to : "";
+						if (!from || !to) {
+							writeJson(res, 400, { error: "from and to are required for trace" });
+							return;
+						}
+						coreArgs.from = from;
+						coreArgs.to = to;
+						seedFallback = from;
+					} else {
+						const document = typeof body?.document === "string" ? body.document : "";
+						if (!document) {
+							writeJson(res, 400, { error: "document is required" });
+							return;
+						}
+						coreArgs.document = document;
+						coreArgs.limit = typeof body?.limit === "number" ? Math.trunc(body.limit) : 10;
+						if (operation === "impact") {
+							const depth = typeof body?.depth === "number" ? Math.trunc(body.depth) : 2;
+							coreArgs.depth = Math.max(1, Math.min(5, depth));
+						}
+						seedFallback = document;
+					}
+					const raw = await manager.query("docgraph_graph", coreArgs, 3e4);
+					const rawSeed = typeof raw?.seedNodeId === "string" ? raw.seedNodeId : typeof raw?.seed === "string" ? raw.seed : "";
+					const projectName = projectNameOf(cwd);
+					writeJson(res, 200, { payload: mapGraphResult(raw, projectName, rawSeed || nodeId(projectName, seedFallback.split(/[\\/]/).join("/")), operation, typeof coreArgs.depth === "number" ? coreArgs.depth : void 0) });
+				} catch (error) {
+					writeJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+				}
+			}
+		}
+	];
+}
+//#endregion
 //#region src/index.ts
 const name = "dsh-doc-graph";
-const inject = ["tools", "skills"];
+const inject = [
+	"tools",
+	"skills",
+	"webServer"
+];
 function apply(ctx) {
 	for (const tool of docgraphTools(ctx)) ctx.tools.register(tool);
 	ctx.skills.registerProvider(() => docGraphSkillProvider);
+	ctx.effect(() => {
+		const disposers = docGraphRoutes(ctx).map((route) => ctx.webServer.register(route));
+		return () => {
+			for (const dispose of disposers) dispose();
+		};
+	}, "dsh-doc-graph: routes");
 }
 //#endregion
 export { apply, inject, name };
