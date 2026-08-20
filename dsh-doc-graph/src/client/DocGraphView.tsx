@@ -5,15 +5,46 @@
  * instruction to the current session, and the agent runs the matching
  * docgraph_* tool.
  */
+import { useEffect, useMemo } from 'react'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import { useSessionGraphState } from './DocGraphUIContext.js'
+import { useDocGraphUI, useSessionGraphState } from './DocGraphUIContext.js'
+import { isDocGraphPayload, type DocGraphPayload } from '../types.js'
 import { GraphWorkspace } from './drawer/graph/GraphWorkspace.js'
 import { OverviewSection } from './drawer/OverviewSection.js'
 import { DocListSection } from './drawer/DocListSection.js'
 
-export function DocGraphView({ sessionId, inputActions }: PropsRuntime<'conversation.view'>) {
+type ToolResultLike = {
+  kind?: unknown
+  call?: { name?: string } | null
+  meta?: unknown
+}
+
+function latestDocGraphPayload(nodes: readonly unknown[]): DocGraphPayload | null {
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const node = nodes[i] as ToolResultLike
+    if (node?.kind !== 'tool-result') continue
+    const toolName = node.call?.name ?? ''
+    if (!toolName.startsWith('docgraph_')) continue
+    const meta = node.meta as { kind?: unknown; payload?: unknown } | undefined
+    if (meta && isDocGraphPayload(meta.payload)) return meta.payload
+  }
+  return null
+}
+
+export function DocGraphView({ sessionId, inputActions, useSession }: PropsRuntime<'conversation.view'>) {
+  const ui = useDocGraphUI()
   const state = useSessionGraphState(sessionId)
-  const payload = state.activePayload
+  const snapshot = useSession((s) => s)
+  const latestPayload = useMemo(
+    () => latestDocGraphPayload(snapshot?.nodes ?? []),
+    [snapshot],
+  )
+
+  useEffect(() => {
+    if (latestPayload) ui.setPayload(sessionId, latestPayload)
+  }, [latestPayload, sessionId, ui])
+
+  const payload = state.activePayload ?? latestPayload
 
   const askAgent = (text: string) => {
     if (!inputActions) return
