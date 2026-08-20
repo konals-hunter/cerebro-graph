@@ -285,3 +285,21 @@
 
 /* ---- a11y §10.6 ---- */
 :focus-visible { outline: 2px solid var(--business, #163b5c); outline-offset: 2px; }
+
+/* ---- conversation view tab ---- */
+.dsh-docgraph-view-empty {
+  border: 1px dashed var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--dsw-alias-label-caption);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.dsh-docgraph-view-empty b { font-size: 14px; color: var(--dsw-alias-label-primary); }
+.dsh-docgraph-view-empty p { margin: 0; }
+.dsh-docgraph-view-empty code { font-size: 12px; }
+.dsh-docgraph-view-stack { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px; }

@@ -10,6 +10,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { ToolviewCard } from './cards/CardDispatcher.js'
 import { DocGraphDock } from './DocGraphDock.js'
 import { DocGraphDrawer } from './drawer/DocGraphDrawer.js'
+import { DocGraphView } from './DocGraphView.js'
 import { docGraphStore } from './DocGraphUIContext.js'
 import './docgraph.css'
 
@@ -111,6 +112,10 @@ export function apply(ctx: ClientContext): () => void {
       ctx.slots.register({ name: 'tool.call.toolview', key: toolName }, ToolviewCard),
     )
   }
+
+  ctx.slots.inject('conversation.view', () =>
+    ctx.slots.register({ name: 'conversation.view', id: 'docgraph', label: '文档图谱', order: 20 }, DocGraphView),
+  )
 
   ctx.slots.inject('conversation.input.dock', () => {
     const disposeDock = ctx.slots.register({ name: 'conversation.input.dock', id: 'docgraph-dock', order: 40 }, DocGraphDock)
